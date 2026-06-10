@@ -1,0 +1,16 @@
+node_modules/
+.env
+auth_info_baileys/
+bot_data.json
+bot_data.json.tmp
+pdf_cache/
+.easyocr_models/
+pycache/
+*.pyc
+*.log
+*.tmp
+*.mp3
+*.ogg
+*.wav
+*.pdf
+.DS_Store
