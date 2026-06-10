@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "start": "node bot.js",
+    "check": "node --check bot.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "latest",
+    "qrcode": "latest",
+    "qrcode-terminal": "latest"
+  }
+}
