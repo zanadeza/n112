@@ -1,0 +1,38 @@
+تقرير الفحص والتصحيح النهائي — MedTerm
+
+تم فحص المشروع المرفوع داخل ZIP ثم تطبيق إصلاحات محافظة على الميزات بدون حذف وظائف.
+
+الإصلاحات التي طُبّقت:
+1) إصلاح خطأ Runtime في معالجة الصور داخل bot.js:
+   - كان يتم استخدام المتغير caption قبل تعريفه داخل بلوك imageMessage.
+   - هذا كان يسبب ReferenceError عند إرسال صورة، خصوصاً عند طلب تحسين الصورة.
+   - تم نقل تعريف caption قبل استخدامه، وحذف التعريف المكرر.
+
+2) إصلاح race condition في image_ocr.js:
+   - handler الخاص بـ worker.on('error') كان يستطيع عمل reject بعد timeout/resolve.
+   - تم ربطه بـ finishReject واحترام settled لمنع Double reject وتنظيف الملف المؤقت بشكل موحّد.
+
+3) تحسين تنظيف الملفات المؤقتة في file_tools.js:
+   - عند فشل إنشاء PDF/TXT أو انتهاء المهلة يتم حذف الملف الناتج المؤقت إن وُجد.
+   - يقلل تراكم ملفات temp على Termux.
+
+4) تحسين تنظيف الملفات المؤقتة في image_tools.js:
+   - عند فشل تحسين/توليد الصورة أو انتهاء المهلة يتم حذف الصورة الناتجة المؤقتة إن وُجدت.
+   - ملف الإدخال المؤقت ما زال يُنظف في finally كما كان.
+
+الفحوصات التي نجحت:
+- node --check لكل ملفات JS:
+  bot.js, image_ocr.js, pdf_processor.js, file_tools.js, image_tools.js
+- Python compile لكل ملفات Python:
+  image_ocr_worker.py, pdf_worker.py, stt_worker.py, tts_worker.py, file_maker_worker.py, image_tools_worker.py
+- bash -n:
+  install_local_ai.sh
+- Smoke tests محلية:
+  إنشاء TXT نجح
+  إنشاء PDF نجح
+  توليد صورة محلية بسيط نجح
+
+ملاحظات مهمة:
+- لم يتم حذف أي ميزة من المشروع.
+- لم يتم تغيير مفاتيح API أو أرقام أو إعدادات خاصة.
+- لا يمكن ضمان "صفر أخطاء" في بيئة الإنتاج بدون تشغيل فعلي على Termux مع Baileys وبيئة WhatsApp، لكن الأخطاء المؤكدة التي ظهرت أثناء الفحص تم تصحيحها.

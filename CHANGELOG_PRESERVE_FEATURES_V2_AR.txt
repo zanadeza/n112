@@ -1,0 +1,56 @@
+تقرير التصليحات النهائية المحافظة على الميزات
+
+المصدر المستخدم:
+- medterm_project_fully_fixed(1).zip كنسخة أساسية.
+
+مبدأ العمل:
+- لم يتم حذف أي ميزة أو وظيفة.
+- التعديلات محصورة في إصلاحات أخطاء تشغيل/أمان/استقرار/ذاكرة.
+- تم الحفاظ على بنية المشروع وأسماء الملفات والواجهات بين Node.js و Python.
+
+التصليحات المطبقة:
+
+1) bot.js
+- جعل parseCookie آمناً ضد cookies تالفة أو encoding غير صالح، حتى لا تسقط لوحة التحكم عند وجود Cookie غير قابل للفك.
+- تحسين splitMessage حتى لا يفقد البيانات عند وجود كلمة/رابط أطول من حد WhatsApp، بل يجزئها بشكل آمن.
+- تصحيح خصم حصة الصوت ليتم فقط عند وجود ttsQuota فعلياً.
+- جعل فك بيانات login أكثر تحملاً للمدخلات غير الصالحة.
+- تحديث تعليق TTS ليعكس الواقع: edge-tts يحتاج إنترنت، وpyttsx3 fallback محلي.
+
+2) image_ocr.js
+- إصلاح race condition في timeout/close حتى لا يحدث resolve/reject أكثر من مرة.
+- ضمان تنظيف الملف المؤقت مرة واحدة فقط.
+- الحفاظ على نفس واجهة extractTextFromImage ونفس تنسيق النتيجة.
+
+3) pdf_processor.js
+- منع reject/resolve المتكرر عند أخطاء worker القاتلة.
+- قراءة آخر JSON متبقٍ في stdoutBuf عند إغلاق worker في حال وصل بدون newline نهائي.
+- الحفاظ على نفس واجهة processPDF و checkDependencies.
+
+4) tts_worker.py
+- إضافة run_async لتشغيل edge-tts بأمان حتى في بيئات فيها event loop قائم.
+- الحفاظ على نفس ترتيب المحاولات: edge-tts أولاً ثم pyttsx3 fallback.
+
+5) stt_worker.py
+- تعديل ffmpeg حتى لا يخزن stdout/stderr في الذاكرة عند تحويل الصوت، باستخدام DEVNULL.
+- الحفاظ على نفس واجهة الإدخال والإخراج JSON.
+
+6) image_ocr_worker.py
+- عند طلب EasyOCR بدون numpy، أصبح worker يفشل بهدوء ويرجع fallback بدلاً من تمرير PIL object قد لا يقبله EasyOCR.
+- الحفاظ على Tesseract fallback كما هو.
+
+7) pdf_worker.py
+- نفس إصلاح EasyOCR عند عدم توفر numpy.
+- إضافة فحص لحالة doc.extract_image التي قد ترجع None.
+- إضافة logging اختياري للأخطاء عبر PDF_DEBUG=1 بدون إزعاج التشغيل العادي.
+
+الفحوصات المنفذة بعد التصليح:
+- node --check bot.js
+- node --check image_ocr.js
+- node --check pdf_processor.js
+- python3 -m py_compile لكل ملفات Python
+- bash -n install_local_ai.sh
+
+النتيجة:
+- جميع فحوصات syntax نجحت.
+- لم يتم حذف أي ميزة من المشروع.
